@@ -1,0 +1,25 @@
+trigger UpdateLastActivityTrigger on Task (after insert, after update) {
+    System.debug('UpdateLastActivityTrigger');
+    List<SObject> leadOrContactToUpdateList = new List<SObject>();	
+    for(Task task : [select Id, Status, WhoId from Task where Id in:Trigger.New and Status = 'Completed']){
+        System.debug(task);
+        
+        Lead[] leads = [select Id from Lead where Id = :task.WhoId limit 1];
+        if(leads.size()>0){
+            Lead lead = leads[0];
+            lead.Last_Rep_Generated_Activity__c = date.today();
+            leadOrContactToUpdateList.add(lead);
+        	}
+
+                Contact[] contacts = [select Id from Contact where Id = :task.WhoId limit 1];
+                if(contacts.size()>0){
+                    Contact contact = contacts[0];
+                    contact.Last_Rep_Generated_Activity__c = date.today();
+                    leadOrContactToUpdateList.add(contact);
+                }
+        	}
+    }
+    if(leadOrContactToUpdateList.size()>0)
+ 		System.debug('Updating Lead or Contact');
+    	update leadOrContactToUpdateList;
+}
