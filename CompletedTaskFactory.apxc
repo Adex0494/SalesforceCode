@@ -1,0 +1,32 @@
+@isTest
+public class CompletedTaskFactory {
+    public static List<Task> generateCompletedTasksWithRelatedLeadsAndContacts(Integer halfTaskQuantity){
+     
+        List<Lead> leads = new List<Lead>();
+        List<Contact> contacts = new List<Contact>();
+        for(Integer i = 0; i<halfTaskQuantity; i++){
+            Lead l = new Lead(FirstName = 'Test Lead name '+i,LastName = 'Diaz', Company = 'TestC');
+            leads.add(l);
+            
+            Contact c = new Contact(FirstName = 'Test Contact Name', LastName = 'Diaz');
+            contacts.add(c);
+        }
+        
+        insert leads;
+        insert contacts;
+        
+        List<Task> tasks = new List<Task>();
+        for(Integer j = 0; j<halfTaskQuantity;j++){
+            Task t = new Task(Description='Test task related to lead' + j, Status='Completed', WhoId = leads[j].id);
+            tasks.add(t);
+        }
+        
+         for(Integer j = 0; j<halfTaskQuantity;j++){
+            Task t = new Task(Description='Test task related to contact' + j, Status='Completed', WhoId = contacts[j].id);
+            tasks.add(t);
+        }
+        
+        return tasks;	
+        
+    }
+}

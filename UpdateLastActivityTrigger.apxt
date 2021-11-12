@@ -1,24 +1,27 @@
 trigger UpdateLastActivityTrigger on Task (after insert, after update) {
     System.debug('UpdateLastActivityTrigger');
-    List<SObject> leadOrContactToUpdateList = new List<SObject>();	
-    for(Task task : [select Id, Status, WhoId from Task where Id in:Trigger.New and Status = 'Completed']){
-        System.debug(task);
-        
-        Lead[] leads = [select Id from Lead where Id = :task.WhoId limit 1];
-        if(leads.size()>0){
-            Lead lead = leads[0];
-            lead.Last_Rep_Generated_Activity__c = date.today();
-            leadOrContactToUpdateList.add(lead);
-        	}
-
-                Contact[] contacts = [select Id from Contact where Id = :task.WhoId limit 1];
-                if(contacts.size()>0){
-                    Contact contact = contacts[0];
-                    contact.Last_Rep_Generated_Activity__c = date.today();
-                    leadOrContactToUpdateList.add(contact);
-                }
-        	}
+    List<SObject> leadOrContactToUpdateList = new List<SObject>();
+    List<id> leadIdList = new List<id>();
+    List<id> contactIdList = new List<id>();
+    
+    //Select the tasks that have been completed
+    for(Task task : [select Id, Status, WhoId, Who.Type from Task where Id in:Trigger.New and Status = 'Completed']){
+        if(task.WhoId !=null){
+            if(task.Who.Type == 'Lead')
+            	leadIdList.add(task.WhoId);
+           	if(task.Who.Type == 'Contact')
+                contactIdList.add(task.WhoId); 
+        }
     }
+    for (Lead lead :[select id from Lead where id in :leadIdList]){
+        lead.Last_Rep_Generated_Activity__c = date.today();
+        leadOrContactToUpdateList.add(lead);
+    }
+    for (Contact contact : [select id from Contact where id in :contactIdList]){
+        contact.Last_Rep_Generated_Activity__c = date.today();
+        leadOrContactToUpdateList.add(contact);
+    }
+
     if(leadOrContactToUpdateList.size()>0)
  		System.debug('Updating Lead or Contact');
     	update leadOrContactToUpdateList;
